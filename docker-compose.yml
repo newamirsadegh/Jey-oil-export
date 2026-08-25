@@ -1,0 +1,43 @@
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: jey_export
+      POSTGRES_USER: jey_user
+      POSTGRES_PASSWORD: jey_local_change_me
+    volumes:
+      - jey_export_database:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jey_user -d jey_export"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://jey_user:jey_local_change_me@database:5432/jey_export
+      CORS_ORIGINS: http://localhost:3000
+      API_PREFIX: /v1
+      AUTO_CREATE_SCHEMA: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  jey_export_database:

@@ -1,0 +1,9 @@
+node_modules
+dist
+.next
+.git
+.sites-runtime
+.wrangler
+backend/__pycache__
+**/*.pyc
+Jey-Oil-Export-Intelligence.zip
